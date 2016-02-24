@@ -1,0 +1,13 @@
+INPUT(
+./debug/uiapplication.o
+./debug/cdrv.o
+./debug/callback.o
+./debug/cdrv_event.o
+./debug/uidrv.o
+./debug/cdrv_model.o
+./debug/qsyntaxhighlighterhook.o
+./debug/moc_uiapplication.o
+./debug/moc_cdrv_signal.o
+./debug/moc_uidrv.o
+./debug/moc_qsyntaxhighlighterhook.o
+);

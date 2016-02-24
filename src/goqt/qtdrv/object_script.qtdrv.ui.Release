@@ -1,0 +1,13 @@
+INPUT(
+./release/uiapplication.o
+./release/cdrv.o
+./release/callback.o
+./release/cdrv_event.o
+./release/uidrv.o
+./release/cdrv_model.o
+./release/qsyntaxhighlighterhook.o
+./release/moc_uiapplication.o
+./release/moc_cdrv_signal.o
+./release/moc_uidrv.o
+./release/moc_qsyntaxhighlighterhook.o
+);
