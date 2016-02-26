@@ -23,7 +23,7 @@ func isAnsiAsUtf8(buf []byte) bool {
     return true
 }
 
-func ReadTextToLines(filename strings.String) ([]strings.String) {
+func ReadLines(filename strings.String) ([]strings.String) {
     // file, err := os.Open(string(filename))
     // if err != nil {
     //     return nil, err
