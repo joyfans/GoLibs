@@ -309,7 +309,7 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
 
     // fix net/http/client/shouldRedirectPost does not follow StatusTemporaryRedirect
 
-    switch resp.StatusCode {
+    switch HttpStatusCode(resp.StatusCode) {
         case StatusTemporaryRedirect:
             if location := resp.Header.Get("Location"); location != "" {
                 return self.requestImpl(method, location, params_...)
@@ -358,15 +358,18 @@ func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Res
         }
 
         switch resp.StatusCode {
-            case httplib.StatusOK:
-            case httplib.StatusCreated:
-            case httplib.StatusFound:
-            case httplib.StatusNotModified:
+            case StatusOK,
+                 StatusCreated,
+                 StatusNoContent,
+                 StatusFound,
+                 StatusPreconditionFailed,
+                 StatusConferenceNotFound,
+                 StatusNotModified:
                 break
 
-            case httplib.StatusBadGateway,
-                 httplib.StatusServiceUnavailable,
-                 httplib.StatusGatewayTimeout:
+            case StatusBadGateway,
+                 StatusServiceUnavailable,
+                 StatusGatewayTimeout:
                 time.Sleep(time.Second)
                 continue
 

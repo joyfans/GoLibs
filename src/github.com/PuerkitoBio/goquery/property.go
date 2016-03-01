@@ -23,7 +23,7 @@ func (s *Selection) Attr(attrName string) (val string, exists bool) {
 func (s *Selection) Attr2(attrName string) string {
 	val, exists := s.Attr(attrName)
 	if exists == false {
-		Raise("can't find attribute: '" + attrName + "'")
+		Raise(NewAttributeError("can't find attribute: '" + attrName + "'"))
 	}
 
 	return val

@@ -15,11 +15,11 @@ import (
 )
 
 type Response struct {
-    Status      String // e.g. "200 OK"
-    StatusCode  int    // e.g. 200
-    Proto       String // e.g. "HTTP/1.0"
-    ProtoMajor  int    // e.g. 1
-    ProtoMinor  int    // e.g. 0
+    Status      String              // e.g. "200 OK"
+    StatusCode  HttpStatusCode      // e.g. 200
+    Proto       String              // e.g. "HTTP/1.0"
+    ProtoMajor  int                 // e.g. 1
+    ProtoMinor  int                 // e.g. 0
     Header      httplib.Header
     Content     []byte
     Request     *httplib.Request
@@ -39,7 +39,7 @@ func NewResponse(resp *httplib.Response, options *RequestOptions) (response *Res
 
     response = &Response{
         Status      : String(resp.Status),
-        StatusCode  : resp.StatusCode,
+        StatusCode  : HttpStatusCode(resp.StatusCode),
         Proto       : String(resp.Proto),
         ProtoMajor  : resp.ProtoMajor,
         ProtoMinor  : resp.ProtoMinor,
