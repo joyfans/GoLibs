@@ -2,16 +2,11 @@ package socket
 
 import (
     . "ml/trace"
-    . "fmt"
     "net"
 )
 
 type SocketError struct {
     *BaseException
-}
-
-type SocketTimeoutError struct {
-    *SocketError
 }
 
 func RaiseSocketError(err error) {
@@ -21,7 +16,7 @@ func RaiseSocketError(err error) {
 
     if e, ok := err.(*net.OpError); ok {
         if e.Timeout() {
-            Raise(NewSocketTimeoutError(e.Error()))
+            Raise(NewTimeoutError(e.Error()))
         }
     }
 
@@ -34,8 +29,3 @@ func NewSocketError(msg string) *SocketError {
     }
 }
 
-func NewSocketTimeoutError(msg string) *SocketTimeoutError {
-    return &SocketTimeoutError{
-        SocketError: NewSocketError(msg),
-    }
-}

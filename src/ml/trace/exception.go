@@ -32,6 +32,10 @@ type AttributeError struct {
     *BaseException
 }
 
+type TimeoutError struct {
+    *BaseException
+}
+
 type KeyError struct {
     *BaseException
 }
@@ -64,6 +68,12 @@ func NewIndexError(msg string) *IndexError {
 
 func NewAttributeError(msg string) *AttributeError {
     return &AttributeError{
+        BaseException: NewBaseException(msg),
+    }
+}
+
+func NewTimeoutError(msg string) *TimeoutError {
+    return &TimeoutError{
         BaseException: NewBaseException(msg),
     }
 }

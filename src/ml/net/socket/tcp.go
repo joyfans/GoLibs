@@ -5,7 +5,6 @@ import (
     "net"
     "time"
     "strings"
-    "ml/logging/logger"
 )
 
 var (
@@ -18,9 +17,23 @@ type TcpSocket struct {
     WriteTimeout    time.Duration
 }
 
+const (
+    DefaultTimeout = 60 * time.Second
+)
+
 func NewTcpSocket() Socket {
     tcp := &TcpSocket{}
+    tcp.SetTimeout(DefaultTimeout)
     return tcp
+}
+
+func (self *TcpSocket) Close() {
+    if self.conn == nil {
+        return
+    }
+
+    RaiseSocketError(self.conn.Close())
+    self.conn = nil
 }
 
 func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {
@@ -76,10 +89,6 @@ func (self *TcpSocket) ReadAll(n int) (buf []byte) {
         }
 
         block := self.Read(blockSize)
-        if len(block) == 0 {
-            logger.Debug("read return an empty block")
-        }
-
         buf = append(buf, block...)
         n -= len(block)
     }
@@ -106,15 +115,6 @@ func (self *TcpSocket) Write(buf []byte) (n int) {
     }
 
     return n
-}
-
-func (self *TcpSocket) Close() {
-    if self.conn == nil {
-        return
-    }
-
-    RaiseSocketError(self.conn.Close())
-    self.conn = nil
 }
 
 func (self *TcpSocket) LocalAddr() net.Addr {
