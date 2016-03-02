@@ -4,6 +4,8 @@ import (
     . "fmt"
     "net"
     "time"
+    "strings"
+    "ml/logging/logger"
 )
 
 var (
@@ -26,6 +28,10 @@ func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {
 
     if self.conn != nil {
         RaiseSocketError(AlreadyConnectedError)
+    }
+
+    if strings.ToLower(host) == "localhost" {
+        host = "127.0.0.1"
     }
 
     switch {
@@ -70,6 +76,10 @@ func (self *TcpSocket) ReadAll(n int) (buf []byte) {
         }
 
         block := self.Read(blockSize)
+        if len(block) == 0 {
+            logger.Debug("read return an empty block")
+        }
+
         buf = append(buf, block...)
         n -= len(block)
     }

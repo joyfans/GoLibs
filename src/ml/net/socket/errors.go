@@ -7,7 +7,7 @@ import (
 )
 
 type SocketError struct {
-    Message string
+    *BaseException
 }
 
 type SocketTimeoutError struct {
@@ -29,17 +29,13 @@ func RaiseSocketError(err error) {
 }
 
 func NewSocketError(msg string) *SocketError {
-    return &SocketError{msg}
+    return &SocketError{
+        BaseException: NewBaseException(msg),
+    }
 }
 
 func NewSocketTimeoutError(msg string) *SocketTimeoutError {
-    return &SocketTimeoutError{SocketError: NewSocketError(msg)}
-}
-
-func (self *SocketError) String() string {
-    return self.Message
-}
-
-func (self *SocketError) Error() string {
-    return self.Message
+    return &SocketTimeoutError{
+        SocketError: NewSocketError(msg),
+    }
 }
