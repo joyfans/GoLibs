@@ -33,7 +33,6 @@ func NewResponse(resp *httplib.Response, options *RequestOptions) (response *Res
     var content []byte
 
     if options.DontReadResponseBody == false && resp.Body != nil {
-        defer resp.Body.Close()
         content = readBody(resp)
     }
 

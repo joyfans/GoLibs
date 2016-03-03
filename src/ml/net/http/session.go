@@ -267,9 +267,15 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
 
     self.client.CheckRedirect = nil
 
+    if resp != nil && resp.Body != nil {
+        defer resp.Body.Close()
+    }
+
     if err != nil {
-        self.defaultTransport.CancelRequest(request)
-        self.defaultTransport.RemoveCancelledRequest(request)
+        if timeout == false {
+            self.defaultTransport.CancelRequest(request)
+            self.defaultTransport.RemoveCancelledRequest(request)
+        }
 
         uerr := err.(*urllib.Error)
         herr := &HttpError{
@@ -312,6 +318,10 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
     switch HttpStatusCode(resp.StatusCode) {
         case StatusTemporaryRedirect:
             if location := resp.Header.Get("Location"); location != "" {
+                if resp != nil && resp.Body != nil {
+                    resp.Body.Close()
+                }
+
                 return self.requestImpl(method, location, params_...)
             }
     }
