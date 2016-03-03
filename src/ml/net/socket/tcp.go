@@ -1,18 +1,20 @@
 package socket
 
 import (
-    . "fmt"
+    "fmt"
     "net"
     "time"
     "strings"
+    "golang.org/x/net/proxy"
 )
 
 var (
-    AlreadyConnectedError   = Errorf("already connected to server")
+    AlreadyConnectedError   = fmt.Errorf("already connected to server")
 )
 
 type TcpSocket struct {
     conn            net.Conn
+    proxy           Proxy
     ReadTimeout     time.Duration
     WriteTimeout    time.Duration
 }
@@ -36,6 +38,10 @@ func (self *TcpSocket) Close() {
     self.conn = nil
 }
 
+func (self *TcpSocket) SetSocks5Proxy(host string, port int, auth *proxy.Auth) {
+    self.proxy = newSocks5Dialer("tcp", mapHost(host), port, auth)
+}
+
 func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {
     var err error
 
@@ -43,16 +49,21 @@ func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {
         RaiseSocketError(AlreadyConnectedError)
     }
 
-    if strings.ToLower(host) == "localhost" {
-        host = "127.0.0.1"
-    }
+    host = mapHost(host)
+    address := fmt.Sprintf("%s:%d", host, port)
 
     switch {
-        case timeout <= 0:
-            self.conn, err = net.Dial("tcp", Sprintf("%s:%d", host, port))
+        case timeout <= 0 && self.proxy == nil:
+            self.conn, err = net.Dial("tcp", address)
 
-        default:
-            self.conn, err = net.DialTimeout("tcp", Sprintf("%s:%d", host, port), timeout)
+        case timeout <= 0 && self.proxy != nil:
+            self.conn, err = self.proxy.Connect("tcp", host, port, 0)
+
+        case self.proxy == nil:
+            self.conn, err = net.DialTimeout("tcp", address, timeout)
+
+        case self.proxy != nil:
+            self.conn, err = self.proxy.Connect("tcp", host, port, timeout)
     }
 
     RaiseSocketError(err)
@@ -140,6 +151,7 @@ func (self *TcpSocket) SetWriteTimeout(t time.Duration) {
 
 func (self *TcpSocket) SetDeadline(t time.Time) {
     RaiseSocketError(self.conn.SetDeadline(t))
+    self.SetTimeout(0)
 }
 
 func (self *TcpSocket) SetReadDeadline(t time.Time) {

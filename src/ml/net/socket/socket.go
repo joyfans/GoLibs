@@ -3,9 +3,11 @@ package socket
 import (
     "net"
     "time"
+    "golang.org/x/net/proxy"
 )
 
 type Socket interface {
+    SetSocks5Proxy(host string, port int, auth *proxy.Auth)
     Connect(host string, port int, timeout time.Duration)
     Read(n int) (buf []byte)
     ReadAll(n int) (buf []byte)
@@ -22,4 +24,8 @@ type Socket interface {
     SetDeadline(t time.Time)
     SetReadDeadline(t time.Time)
     SetWriteDeadline(t time.Time)
+}
+
+type Proxy interface {
+    Connect(network, host string, port int, timeout time.Duration) (net.Conn, error)
 }
