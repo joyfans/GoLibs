@@ -1,7 +1,7 @@
 @echo off
-cd/d "%~dp0"
+rem cd/d "%~dp0"
 
-call init.bat
+call "%~dp0init.bat"
 title %arch%
 
 cmd /k
