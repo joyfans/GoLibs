@@ -377,6 +377,9 @@ func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Res
                  StatusNotModified:
                 break
 
+            case StatusNotFound:
+                break
+
             case StatusBadGateway,
                  StatusServiceUnavailable,
                  StatusGatewayTimeout:
