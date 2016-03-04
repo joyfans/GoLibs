@@ -1,5 +1,9 @@
 package trace
 
+import (
+    "fmt"
+)
+
 type Exception struct {
     Message     string
     Traceback   string
@@ -56,55 +60,55 @@ type PermissionError struct {
     *BaseException
 }
 
-func NewBaseException(msg string) *BaseException {
-    return &BaseException{Message: msg}
+func NewBaseException(format string, args ...interface{}) *BaseException {
+    return &BaseException{Message: fmt.Sprintf(format, args...)}
 }
 
-func NewIndexError(msg string) *IndexError {
+func NewIndexError(format string, args ...interface{}) *IndexError {
     return &IndexError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewAttributeError(msg string) *AttributeError {
+func NewAttributeError(format string, args ...interface{}) *AttributeError {
     return &AttributeError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewTimeoutError(msg string) *TimeoutError {
+func NewTimeoutError(format string, args ...interface{}) *TimeoutError {
     return &TimeoutError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewKeyError(msg string) *KeyError {
+func NewKeyError(format string, args ...interface{}) *KeyError {
     return &KeyError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewNotImplementedError(msg string) *NotImplementedError {
+func NewNotImplementedError(format string, args ...interface{}) *NotImplementedError {
     return &NotImplementedError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewFileGenericError(msg string) *FileGenericError {
+func NewFileGenericError(format string, args ...interface{}) *FileGenericError {
     return &FileGenericError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewFileNotFoundError(msg string) *FileNotFoundError {
+func NewFileNotFoundError(format string, args ...interface{}) *FileNotFoundError {
     return &FileNotFoundError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 
-func NewPermissionError(msg string) *PermissionError {
+func NewPermissionError(format string, args ...interface{}) *PermissionError {
     return &PermissionError{
-        BaseException: NewBaseException(msg),
+        BaseException: NewBaseException(format, args...),
     }
 }
 

@@ -4,7 +4,6 @@ import (
     "fmt"
     "net"
     "time"
-    "strings"
     "golang.org/x/net/proxy"
 )
 
