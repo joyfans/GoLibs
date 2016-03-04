@@ -36,10 +36,20 @@ func (self *Socks5Dialer) Connect(network, host string, port int, timeout time.D
     return self.socks5.Dial(network, fmt.Sprintf("%s:%d", host, port))
 }
 
-func (self *Socks5Dialer) Dial(network, address string) (net.Conn, error) {
+func (self *Socks5Dialer) Dial(network, address string) (c net.Conn, err error) {
     if self.timeout <= 0 {
-        return net.Dial(network, address)
+        c, err = net.Dial(network, address)
+    } else {
+        c, err = net.DialTimeout(network, address, self.timeout)
     }
 
-    return net.DialTimeout(network, address, self.timeout)
+    if err != nil {
+        return
+    }
+
+    if self.timeout > 0 {
+        c.SetDeadline(time.Now().Add(self.timeout * 2))
+    }
+
+    return
 }
