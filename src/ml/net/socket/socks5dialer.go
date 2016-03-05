@@ -41,14 +41,9 @@ func (self *Socks5Dialer) Dial(network, address string) (c net.Conn, err error) 
         c, err = net.Dial(network, address)
     } else {
         c, err = net.DialTimeout(network, address, self.timeout)
-    }
-
-    if err != nil {
-        return
-    }
-
-    if self.timeout > 0 {
-        c.SetDeadline(time.Now().Add(self.timeout * 2))
+        if err == nil {
+            c.SetDeadline(time.Now().Add(self.timeout * 2))
+        }
     }
 
     return
