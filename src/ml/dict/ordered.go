@@ -84,6 +84,10 @@ func (self *orderedDict) String() string {
     // return self.dict.String()
 }
 
+func (self *orderedDict) Dict() Dict {
+    return self.dict
+}
+
 func (self *orderedDict) Length() int {
     return len(self.keys)
 }
