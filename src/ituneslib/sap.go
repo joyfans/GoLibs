@@ -80,6 +80,7 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
     // self.HttpSession.SetProxy("localhost", 6789)
 
     self.HttpSession.DefaultOptions.AutoRetry = true
+    self.HttpSession.DefaultOptions.Ignore404 = false
 
     self.initUrlbag()
     self.initSap(sapType)
