@@ -1,18 +1,13 @@
 package channels
 
 import (
-    . "fmt"
+    "fmt"
 
     "time"
 
     "ml/array"
     "ml/sync2"
 )
-
-func unused() {
-    _ = Fprintln
-    _ = time.Second
-}
 
 type InfiniteChannel struct {
     input   chan interface{}
@@ -46,14 +41,14 @@ func (self *InfiniteChannel) Length() int {
 }
 
 func (self *InfiniteChannel) Close() {
-    Println("close input")
+    fmt.Println("close input")
     close(self.input)
-    Println("wait loop")
+    fmt.Println("wait loop")
     self.event.Wait()
 }
 
 func (self *InfiniteChannel) shutdown() {
-    Println("shutdown")
+    fmt.Println("shutdown")
 FLUSH:
     for _, v := range (self.buffer) {
         select {
@@ -64,7 +59,7 @@ FLUSH:
         }
     }
 
-    Println("close output")
+    fmt.Println("close output")
     close(self.output)
 }
 
@@ -101,6 +96,6 @@ INFINITE_LOOP:
     }
 
     self.shutdown()
-    Println("Broadcast")
+    fmt.Println("Broadcast")
     self.event.Broadcast()
 }

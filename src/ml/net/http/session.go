@@ -57,7 +57,8 @@ func NewSession() *Session {
                 headers             : make(httplib.Header),
                 defaultTransport    : defaultTransport,
                 DefaultOptions      : &RequestOptions{
-                                            MaxTimeoutTimes: DefaultMaxTimeoutTimes,
+                                            MaxTimeoutTimes : DefaultMaxTimeoutTimes,
+                                            Ignore404       : true,
                                         },
             }
 }
@@ -378,7 +379,11 @@ func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Res
                 break
 
             case StatusNotFound:
-                break
+                if options.Ignore404 {
+                    break
+                }
+
+                fallthrough
 
             case StatusBadGateway,
                  StatusServiceUnavailable,

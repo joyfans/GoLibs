@@ -9,6 +9,7 @@ type RequestOptions struct {
     IgnoreEncodeKeys        Array
     OverwriteHeaders        bool
     AutoRetry               bool
+    Ignore404               bool
     MaxTimeoutTimes         int
 }
 
