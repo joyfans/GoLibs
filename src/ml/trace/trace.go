@@ -40,7 +40,7 @@ func raiseimpl(v interface{}) {
 
 func RaiseIf(err error) {
     if err != nil {
-        raiseimpl(err)
+        raiseimpl(NewBaseException(err.Error()))
     }
 }
 
@@ -49,7 +49,7 @@ func Raise(v interface{}) {
 }
 
 func Raisef(v ...interface{}) {
-    raiseimpl(Sprintf(v[0].(string), v[1:]...))
+    raiseimpl(NewBaseException(v[0].(string), v[1:]...))
 }
 
 func Catch(exp interface{}) *Exception {
