@@ -5,7 +5,7 @@ import (
 )
 
 type Base64Error struct {
-    Message string
+    *BaseException
 }
 
 func raiseBase64Error(err error) {
@@ -16,6 +16,8 @@ func raiseBase64Error(err error) {
     Raise(NewBase64Error(err.Error()))
 }
 
-func NewBase64Error(msg string) *Base64Error {
-    return &Base64Error{msg}
+func NewBase64Error(format string, args ...interface{}) *Base64Error {
+    return &Base64Error{
+        BaseException: NewBaseException(format, args...),
+    }
 }
