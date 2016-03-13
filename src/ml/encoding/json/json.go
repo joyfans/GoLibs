@@ -20,7 +20,7 @@ func MustMarshalIndent(v interface{}, prefix, indent string) []byte {
     return data
 }
 
-func LoadFile(file string) JsonDict {
+func loadFile(file string, v interface{}) {
     f, err := os.Open(file)
     if err != nil {
         Raise(NewFileNotFoundError(err.Error()))
@@ -33,20 +33,47 @@ func LoadFile(file string) JsonDict {
         Raise(NewBaseException(err.Error()))
     }
 
-    return LoadData(data)
+    loadData(data, v)
 }
 
-func LoadData(data []byte) JsonDict {
-    v := JsonDict{}
-
-    err := Unmarshal(data, &v)
+func loadData(data []byte, v interface{}) {
+    err := Unmarshal(data, v)
     if err != nil {
         Raise(NewJSONDecodeError(err.Error()))
     }
-
-    return v
 }
 
-func LoadString(text string) JsonDict {
-    return LoadData([]byte(text))
+func loadString(text string, v interface{}) {
+    loadData([]byte(text), v)
+}
+
+
+func LoadFileDict(file string) (v JsonDict) {
+    loadFile(file, &v)
+    return
+}
+
+func LoadDataDict(data []byte) (v JsonDict) {
+    loadData(data, &v)
+    return
+}
+
+func LoadStringDict(text string) (v JsonDict) {
+    loadString(text, &v)
+    return
+}
+
+func LoadFileArray(file string) (v JsonArray) {
+    loadFile(file, &v)
+    return
+}
+
+func LoadDataArray(data []byte) (v JsonArray) {
+    loadData(data, &v)
+    return
+}
+
+func LoadStringArray(text string) (v JsonArray) {
+    loadString(text, &v)
+    return
 }
