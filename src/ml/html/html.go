@@ -9,19 +9,19 @@ import (
     "github.com/PuerkitoBio/goquery"
 )
 
-type Html struct {
+type Document struct {
     *goquery.Document
 }
 
-func Parse(html String) *Html {
+func Parse(html String) *Document {
     doc, err := goquery.NewDocumentFromReader(html.NewReader())
     RaiseIf(err)
-    return &Html{
+    return &Document{
         Document: doc,
     }
 }
 
-func (self *Html) GetAllElements(ids Array) map[string]*goquery.Selection {
+func (self *Document) GetAllElements(ids Array) map[string]*goquery.Selection {
     data := map[string]*goquery.Selection{}
 
     self.Find("[id]").Each(func(i int, s *goquery.Selection) {
