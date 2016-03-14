@@ -45,12 +45,21 @@ func (self String) IsDigit() bool {
     return err == nil
 }
 
-func (self String) ToInteger(base ...int) int64 {
-    if len(base) == 0 {
-        base = append(base, 10)
+func (self String) ToInt(base ...int) int {
+    return int(self.ToInt64(base...))
+}
+
+func (self String) ToInt32(base ...int) int32 {
+    return int32(self.ToInt64(base...))
+}
+
+func (self String) ToInt64(base ...int) int64 {
+    b := 10
+    if len(base) != 0 {
+        b = base[0]
     }
 
-    val, err := strconv.ParseInt(self.String(), base[0], 64)
+    val, err := strconv.ParseInt(self.String(), b, 64)
     RaiseIf(err)
     return val
 }

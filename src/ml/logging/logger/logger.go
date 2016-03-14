@@ -3,6 +3,8 @@ package logger
 import (
     "ml/logging"
     "ml/os2"
+    "log"
+    "io/ioutil"
 )
 
 var (
@@ -19,5 +21,6 @@ var (
 )
 
 func init() {
+    log.SetOutput(ioutil.Discard)
     logger.SetSkip(1)
 }

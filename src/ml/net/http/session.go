@@ -262,8 +262,10 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
         return nil
     }
 
+
     // request.Close = true
     resp, err := self.client.Do(request)
+
     timeout := self.defaultTransport.RemoveCancelledRequest(request)
 
     self.client.CheckRedirect = nil
@@ -356,8 +358,8 @@ func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Res
                     fallthrough
 
                 case HTTP_ERROR_INVALID_RESPONSE,
-                     HTTP_ERROR_BAD_GATE_WAY,
-                     HTTP_ERROR_GENERIC:
+                     HTTP_ERROR_BAD_GATE_WAY:
+                     // HTTP_ERROR_GENERIC:
                     time.Sleep(time.Second)
                     continue
 
