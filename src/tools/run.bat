@@ -51,7 +51,7 @@ pause
 goto:eof
 
 :DELETE_AUTO_INSTALL_PKGS
-call:DELETE_AUTO_INSTALL_PKGS2 "%~f1.x" >NUL 2>NUL
+rem call:DELETE_AUTO_INSTALL_PKGS2 "%~f1.x" >NUL 2>NUL
 goto:eof
 
 :DELETE_AUTO_INSTALL_PKGS2
@@ -87,15 +87,14 @@ goto:eof
 goto:eof
 
 :DELETE_ML_PKG
-goto:eof
-if [%1] == [] (
-    for /f %%i in ('dir/s/b "%~dp0\pkgs\pkg\ml"') do (
-        call:DELETE_ML_PKG "%%~fi.a"
-        goto:eof
-    )
-) else (
-    del/q "%~f1"
-    rd/s/q "%~dpn1"
-)
+rem if [%1] == [] (
+rem     for /f %%i in ('dir/s/b "%~dp0\pkgs\pkg\ml"') do (
+rem         call:DELETE_ML_PKG "%%~fi.a"
+rem         goto:eof
+rem     )
+rem ) else (
+rem     del/q "%~f1"
+rem     rd/s/q "%~dpn1"
+rem )
 
 goto:eof
