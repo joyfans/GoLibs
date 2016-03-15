@@ -13,6 +13,8 @@ const (
     DefaultWindowsUserAgent = "iTunes/12.3 (Windows; Microsoft Windows 8.1 x64 Business Edition (Build 9200); x64) AppleWebKit/7601.1056.1.1"
 )
 
+var sharedUrlBag Dict
+
 type SapSession struct {
     session         uintptr
     primeSignature  []byte
@@ -89,11 +91,18 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
 func (self *SapSession) initUrlbag() {
     var resp *http.Response
 
+    if len(sharedUrlBag) != 0 {
+        self.UrlBag = sharedUrlBag
+        return
+    }
+
     resp = self.HttpSession.Get("https://init.itunes.apple.com/bag.xml?ix=5&ign-bsn=1")
 
     plist := Dict{}
     resp.Plist(&plist)
     plistlib.Unmarshal(plist["bag"].([]byte), &self.UrlBag)
+
+    sharedUrlBag = self.UrlBag
 }
 
 func (self *SapSession) initSap(sapType SapCertType) {
