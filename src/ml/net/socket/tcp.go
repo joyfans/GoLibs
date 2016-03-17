@@ -37,8 +37,17 @@ func (self *TcpSocket) Close() {
     self.conn = nil
 }
 
-func (self *TcpSocket) SetSocks5Proxy(host string, port int, auth *proxy.Auth) {
-    self.proxy = newSocks5Dialer("tcp", mapHost(host), port, auth)
+func (self *TcpSocket) SetSocks5Proxy(host string, port int, auth *Auth) {
+    var a *proxy.Auth
+
+    if auth != nil {
+        a = &proxy.Auth{
+            User: auth.User,
+            Password: auth.Password,
+        }
+    }
+
+    self.proxy = newSocks5Dialer("tcp", mapHost(host), port, a)
 }
 
 func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {

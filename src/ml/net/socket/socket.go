@@ -6,8 +6,13 @@ import (
     "golang.org/x/net/proxy"
 )
 
+type Auth struct {
+    User string
+    Password string
+}
+
 type Socket interface {
-    SetSocks5Proxy(host string, port int, auth *proxy.Auth)
+    SetSocks5Proxy(host string, port int, auth *Auth)
     Connect(host string, port int, timeout time.Duration)
     Read(n int) (buf []byte)
     ReadAll(n int) (buf []byte)
