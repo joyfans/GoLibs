@@ -32,7 +32,7 @@ func sapInitialize() {
 }
 
 func NewSapSession() (session *SapSession) {
-    return <-sapSessionPool
+    return <- sapSessionPool
 }
 
 func createSapSession() (session *SapSession) {
@@ -76,7 +76,7 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
         "Accept-Encoding"       : "gzip",
         "Accept-Language"       : "zh-cn, zh;q=0.75, en-us;q=0.50, en;q=0.25",
         "X-Apple-Store-Front"   : country.StoreFront(),
-        "X-Apple-Tz"            : "28800",
+        "X-Apple-Tz"            : country.TimeZone(),
     })
 
     // self.HttpSession.SetProxy("localhost", 6789)
