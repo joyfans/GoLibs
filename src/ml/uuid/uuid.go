@@ -6,6 +6,8 @@
 package uuid
 
 import (
+    . "ml/strings"
+    . "ml/trace"
     "crypto/md5"
     "crypto/rand"
     "crypto/sha1"
@@ -106,6 +108,13 @@ func NewV4() (u *UUID, err error) {
     u.setVariant(ReservedRFC4122)
     u.setVersion(4)
     return
+}
+
+func UUIDV4() String {
+    u, err := NewV4()
+    RaiseIf(err)
+
+    return String(u.String())
 }
 
 // Generate a UUID based on the SHA-1 hash of a namespace identifier

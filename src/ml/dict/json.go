@@ -33,6 +33,14 @@ func toJsonArray(v interface{}) JsonArray {
     return v.([]interface{})
 }
 
+func (self JsonDict) MergeFrom(other JsonDict) JsonDict {
+    for k, v := range other {
+        self[k] = v
+    }
+
+    return self
+}
+
 func (self JsonDict) Map(key string) JsonDict {
     return toJsonDict(self[key])
 }

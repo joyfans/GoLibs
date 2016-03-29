@@ -48,6 +48,16 @@ func (self Dict) String() string {
     return self.toString(0)
 }
 
+func (self Dict) ToJson() JsonDict {
+    r := JsonDict{}
+
+    for k, v := range self {
+        r[fmt.Sprint(k)] = v
+    }
+
+    return r
+}
+
 func (self Dict) MergeFrom(other Dict) Dict {
     for k, v := range other {
         self[k] = v

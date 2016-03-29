@@ -64,6 +64,18 @@ func (self String) ToInt64(base ...int) int64 {
     return val
 }
 
+func (self String) Reverse() String {
+    n := self.Length()
+    runes := make([]rune, n)
+
+    for _, rune := range self {
+        n--
+        runes[n] = rune
+    }
+
+    return String(runes)
+}
+
 func (self String) HexStringToBytes() []byte {
     data, err := hex.DecodeString(self.String())
     RaiseIf(err)
