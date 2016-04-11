@@ -19,6 +19,8 @@ import (
     "ml/logging/logger"
 )
 
+var cancelFollowRedirects = fmt.Errorf("")
+
 type Session struct {
     cookie             *cookiejar.Jar
     client             *httplib.Client
@@ -59,6 +61,7 @@ func NewSession() *Session {
                 DefaultOptions      : &RequestOptions{
                                             MaxTimeoutTimes : DefaultMaxTimeoutTimes,
                                             Ignore404       : true,
+                                            AutoRetry       : true,
                                         },
             }
 }
@@ -145,7 +148,6 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
         RaiseHttpError(err)
         query, err := urllib.ParseQuery(u.RawQuery)
         RaiseHttpError(err)
-
 
         for k, vs := range query {
             for _, v := range vs {
@@ -247,6 +249,10 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
     }
 
     self.client.CheckRedirect = func(request *httplib.Request, via []*httplib.Request) error {
+        if options.DontFollowRedirects {
+            return cancelFollowRedirects
+        }
+
         if len(via) >= 10 {
             Raise(NewHttpError(HTTP_ERROR_TOO_MANY_REDIRECT, method, url, "stopped after 10 redirects"))
         }
@@ -274,52 +280,61 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
         defer resp.Body.Close()
     }
 
-    if err != nil {
-        if timeout == false {
-            self.defaultTransport.CancelRequest(request)
-            self.defaultTransport.RemoveCancelledRequest(request)
-        }
+    switch {
+        case err != nil:
+            if timeout == false {
+                self.defaultTransport.CancelRequest(request)
+                self.defaultTransport.RemoveCancelledRequest(request)
+            }
 
-        uerr := err.(*urllib.Error)
-        herr := &HttpError{
-                    Op      : uerr.Op,
-                    URL     : uerr.URL,
-                    Err     : uerr.Err,
-                }
+            uerr := err.(*urllib.Error)
+            if uerr.Err == cancelFollowRedirects {
+                break
+            }
 
-        msg := String(herr.Err.Error())
+            herr := &HttpError{
+                        Op      : uerr.Op,
+                        URL     : uerr.URL,
+                        Err     : uerr.Err,
+                    }
 
-        switch {
-            case timeout,
-                 msg.Contains("TLS handshake timeout"),
-                 msg.Contains("Client.Timeout exceeded"):
-                herr.Type = HTTP_ERROR_TIMEOUT
+            msg := String(herr.Err.Error())
 
-            case msg.Contains("error connecting to proxy"):
-                herr.Type = HTTP_ERROR_CONNECT_PROXY
+            switch {
+                case timeout,
+                     msg.Contains("TLS handshake timeout"),
+                     msg.Contains("Client.Timeout exceeded"):
+                    herr.Type = HTTP_ERROR_TIMEOUT
 
-            case msg.Contains("unexpected EOF"):
-                herr.Type = HTTP_ERROR_INVALID_RESPONSE
+                case msg.Contains("error connecting to proxy"):
+                    herr.Type = HTTP_ERROR_CONNECT_PROXY
 
-            case msg.Contains("wsarecv"):
-                herr.Type = HTTP_ERROR_READ_ERROR
+                case msg.Contains("unexpected EOF"):
+                    herr.Type = HTTP_ERROR_INVALID_RESPONSE
 
-            case msg.Contains("Bad Gateway"):
-                herr.Type = HTTP_ERROR_BAD_GATE_WAY
+                case msg.Contains("wsarecv"):
+                    herr.Type = HTTP_ERROR_READ_ERROR
 
-            default:
-                herr.Type = HTTP_ERROR_GENERIC
-        }
+                case msg.Contains("Bad Gateway"):
+                    herr.Type = HTTP_ERROR_BAD_GATE_WAY
 
-        Raise(herr)
+                default:
+                    herr.Type = HTTP_ERROR_GENERIC
+            }
 
-        return nil
+            Raise(herr)
+
+            return nil
     }
 
     // fix net/http/client/shouldRedirectPost does not follow StatusTemporaryRedirect
 
     switch HttpStatusCode(resp.StatusCode) {
         case StatusTemporaryRedirect:
+            if options.DontFollowRedirects {
+                break
+            }
+
             if location := resp.Header.Get("Location"); location != "" {
                 if resp != nil && resp.Body != nil {
                     resp.Body.Close()

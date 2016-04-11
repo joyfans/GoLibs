@@ -6,6 +6,7 @@ import (
 
 type RequestOptions struct {
     DontReadResponseBody    bool
+    DontFollowRedirects     bool
     IgnoreEncodeKeys        Array
     OverwriteHeaders        bool
     AutoRetry               bool
