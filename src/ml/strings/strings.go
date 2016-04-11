@@ -64,6 +64,25 @@ func (self String) ToInt64(base ...int) int64 {
     return val
 }
 
+func (self String) ToFloat64() float64 {
+    r := self.Split(".", 1)
+    fixed := r[0]
+
+    var float String = "0"
+
+    if len(r) > 1 {
+        float = r[1]
+    }
+
+    val, err := strconv.ParseFloat((fixed + "." + float.Replace(".", "")).String(), 64)
+    RaiseIf(err)
+    return val
+}
+
+func (self String) ToFloat32() float32 {
+    return float32(self.ToFloat64())
+}
+
 func (self String) Reverse() String {
     n := self.Length()
     runes := make([]rune, n)
