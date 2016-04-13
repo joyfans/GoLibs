@@ -1,0 +1,18 @@
+---
+language: go
+
+go:
+  - 1.6
+
+services:
+  - rabbitmq
+  - memcached
+  - redis-server
+  - mongodb
+
+branches:
+  only:
+    - master
+
+script: 
+  - make test
