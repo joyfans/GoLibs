@@ -19,6 +19,21 @@ import (
 	"unicode/utf8"
 )
 
+type importer struct {
+	imports map[string]*types.Package
+	data    []byte
+	path    string
+
+	buf      []byte   // for reading strings
+	bufarray [64]byte // initial underlying array for buf, large enough to avoid allocation when compiling std lib
+
+	pkgList []*types.Package
+	typList []types.Type
+
+	debugFormat bool
+	read        int // bytes read
+}
+
 // BImportData imports a package from the serialized package data
 // and returns the number of bytes consumed and a reference to the package.
 // If data is obviously malformed, an error is returned but in
@@ -27,6 +42,7 @@ func BImportData(imports map[string]*types.Package, data []byte, path string) (i
 	p := importer{
 		imports: imports,
 		data:    data,
+		path:    path,
 	}
 	p.buf = p.bufarray[:]
 
@@ -43,65 +59,29 @@ func BImportData(imports map[string]*types.Package, data []byte, path string) (i
 	// --- generic export data ---
 
 	if v := p.string(); v != "v0" {
-		return p.read, nil, fmt.Errorf("unknown version: %s", v)
+		return p.read, nil, fmt.Errorf("unknown export data version: %s", v)
 	}
 
 	// populate typList with predeclared "known" types
 	p.typList = append(p.typList, predeclared...)
 
 	// read package data
-	// TODO(gri) clean this up
-	i := p.tagOrIndex()
-	if i != packageTag {
-		panic(fmt.Sprintf("package tag expected, got %d", i))
-	}
-	name := p.string()
-	if s := p.string(); s != "" {
-		panic(fmt.Sprintf("empty path expected, got %s", s))
-	}
-	pkg := p.imports[path]
-	if pkg == nil {
-		pkg = types.NewPackage(path, name)
-		p.imports[path] = pkg
-	}
-	p.pkgList = append(p.pkgList, pkg)
+	pkg := p.pkg()
 
-	if debug && p.pkgList[0] != pkg {
-		panic("imported packaged not found in pkgList[0]")
+	// read objects of phase 1 only (see cmd/compiler/internal/gc/bexport.go)
+	objcount := 0
+	for {
+		tag := p.tagOrIndex()
+		if tag == endTag {
+			break
+		}
+		p.obj(tag)
+		objcount++
 	}
 
-	// read compiler-specific flags
-	p.string() // discard
-
-	// read consts
-	for i := p.int(); i > 0; i-- {
-		name := p.string()
-		typ := p.typ(nil)
-		val := p.value()
-		p.declare(types.NewConst(token.NoPos, pkg, name, typ, val))
-	}
-
-	// read vars
-	for i := p.int(); i > 0; i-- {
-		name := p.string()
-		typ := p.typ(nil)
-		p.declare(types.NewVar(token.NoPos, pkg, name, typ))
-	}
-
-	// read funcs
-	for i := p.int(); i > 0; i-- {
-		name := p.string()
-		sig := p.typ(nil).(*types.Signature)
-		p.int() // read and discard index of inlined function body
-		p.declare(types.NewFunc(token.NoPos, pkg, name, sig))
-	}
-
-	// read types
-	for i := p.int(); i > 0; i-- {
-		// name is parsed as part of named type and the
-		// type object is added to scope via respective
-		// named type
-		_ = p.typ(nil).(*types.Named)
+	// self-verification
+	if count := p.int(); count != objcount {
+		panic(fmt.Sprintf("got %d objects; want %d", objcount, count))
 	}
 
 	// ignore compiler-specific import data
@@ -122,25 +102,6 @@ func BImportData(imports map[string]*types.Package, data []byte, path string) (i
 	pkg.MarkComplete()
 
 	return p.read, pkg, nil
-}
-
-type importer struct {
-	imports  map[string]*types.Package
-	data     []byte
-	buf      []byte   // for reading strings
-	bufarray [64]byte // initial underlying array for buf, large enough to avoid allocation when compiling std lib
-	pkgList  []*types.Package
-	typList  []types.Type
-
-	debugFormat bool
-	read        int // bytes read
-}
-
-func (p *importer) declare(obj types.Object) {
-	if alt := p.pkgList[0].Scope().Insert(obj); alt != nil {
-		// This can only happen if we import a package a second time.
-		panic(fmt.Sprintf("%s already declared", alt.Name()))
-	}
 }
 
 func (p *importer) pkg() *types.Package {
@@ -164,20 +125,74 @@ func (p *importer) pkg() *types.Package {
 		panic("empty package name in import")
 	}
 
-	// we should never see an empty import path
-	if path == "" {
-		panic("empty import path")
+	// an empty path denotes the package we are currently importing;
+	// it must be the first package we see
+	if (path == "") != (len(p.pkgList) == 0) {
+		panic(fmt.Sprintf("package path %q for pkg index %d", path, len(p.pkgList)))
 	}
 
 	// if the package was imported before, use that one; otherwise create a new one
+	if path == "" {
+		path = p.path
+	}
 	pkg := p.imports[path]
 	if pkg == nil {
 		pkg = types.NewPackage(path, name)
 		p.imports[path] = pkg
+	} else if pkg.Name() != name {
+		panic(fmt.Sprintf("conflicting names %s and %s for package %q", pkg.Name(), name, path))
 	}
 	p.pkgList = append(p.pkgList, pkg)
 
 	return pkg
+}
+
+func (p *importer) declare(obj types.Object) {
+	pkg := obj.Pkg()
+	if alt := pkg.Scope().Insert(obj); alt != nil {
+		// This could only trigger if we import a (non-type) object a second time.
+		// This should never happen because 1) we only import a package once; and
+		// b) we ignore compiler-specific export data which may contain functions
+		// whose inlined function bodies refer to other functions that were already
+		// imported.
+		// (See also the comment in cmd/compile/internal/gc/bimport.go importer.obj,
+		// switch case importing functions).
+		panic(fmt.Sprintf("%s already declared", alt.Name()))
+	}
+}
+
+func (p *importer) obj(tag int) {
+	switch tag {
+	case constTag:
+		pkg, name := p.qualifiedName()
+		typ := p.typ(nil)
+		val := p.value()
+		p.declare(types.NewConst(token.NoPos, pkg, name, typ, val))
+
+	case typeTag:
+		_ = p.typ(nil)
+
+	case varTag:
+		pkg, name := p.qualifiedName()
+		typ := p.typ(nil)
+		p.declare(types.NewVar(token.NoPos, pkg, name, typ))
+
+	case funcTag:
+		pkg, name := p.qualifiedName()
+		params, isddd := p.paramList()
+		result, _ := p.paramList()
+		sig := types.NewSignature(nil, params, result, isddd)
+		p.declare(types.NewFunc(token.NoPos, pkg, name, sig))
+
+	default:
+		panic(fmt.Sprintf("unexpected object tag %d", tag))
+	}
+}
+
+func (p *importer) qualifiedName() (pkg *types.Package, name string) {
+	name = p.string()
+	pkg = p.pkg()
+	return
 }
 
 func (p *importer) record(t types.Type) {
@@ -209,8 +224,7 @@ func (p *importer) typ(parent *types.Package) types.Type {
 	switch i {
 	case namedTag:
 		// read type object
-		name := p.string()
-		parent = p.pkg()
+		parent, name := p.qualifiedName()
 		scope := parent.Scope()
 		obj := scope.Lookup(name)
 
@@ -235,17 +249,22 @@ func (p *importer) typ(parent *types.Package) types.Type {
 		t0.SetUnderlying(p.typ(parent))
 
 		// interfaces don't have associated methods
-		if _, ok := t0.Underlying().(*types.Interface); ok {
+		if types.IsInterface(t0) {
 			return t
 		}
 
 		// read associated methods
 		for i := p.int(); i > 0; i-- {
+			// TODO(gri) replace this with something closer to fieldName
 			name := p.string()
+			if !exported(name) {
+				p.pkg()
+			}
+
 			recv, _ := p.paramList() // TODO(gri) do we need a full param list for the receiver?
 			params, isddd := p.paramList()
 			result, _ := p.paramList()
-			p.int() // read and discard index of inlined function body
+
 			sig := types.NewSignature(recv.At(0), params, result, isddd)
 			t0.AddMethod(types.NewFunc(token.NoPos, parent, name, sig))
 		}
@@ -434,18 +453,20 @@ func (p *importer) param(named bool) (*types.Var, bool) {
 		t = types.NewSlice(td.elem)
 	}
 
+	var pkg *types.Package
 	var name string
 	if named {
 		name = p.string()
 		if name == "" {
 			panic("expected named parameter")
 		}
+		pkg = p.pkg()
 	}
 
 	// read and discard compiler-specific info
 	p.string()
 
-	return types.NewVar(token.NoPos, nil, name, t), isddd
+	return types.NewVar(token.NoPos, pkg, name, t), isddd
 }
 
 func exported(name string) bool {
@@ -469,6 +490,8 @@ func (p *importer) value() constant.Value {
 		return constant.BinaryOp(re, token.ADD, constant.MakeImag(im))
 	case stringTag:
 		return constant.MakeString(p.string())
+	case unknownTag:
+		return constant.MakeUnknown()
 	default:
 		panic(fmt.Sprintf("unexpected value tag %d", tag))
 	}
@@ -619,8 +642,13 @@ func (p *importer) byte() byte {
 
 // Tags. Must be < 0.
 const (
-	// Packages
+	// Objects
 	packageTag = -(iota + 1)
+	constTag
+	typeTag
+	varTag
+	funcTag
+	endTag
 
 	// Types
 	namedTag
@@ -642,6 +670,7 @@ const (
 	fractionTag // not used by gc
 	complexTag
 	stringTag
+	unknownTag // not used by gc (only appears in packages with errors)
 )
 
 var predeclared = []types.Type{
@@ -682,4 +711,15 @@ var predeclared = []types.Type{
 
 	// package unsafe
 	types.Typ[types.UnsafePointer],
+
+	// invalid type
+	types.Typ[types.Invalid], // only appears in packages with errors
+
+	// used internally by gc; never used by this package or in .a files
+	anyType{},
 }
+
+type anyType struct{}
+
+func (t anyType) Underlying() types.Type { return t }
+func (t anyType) String() string         { return "any" }

@@ -37,6 +37,9 @@ func main() { // @describe func-def-main "main"
 	_ = d.f    // @describe func-ref-d.f "d.f"
 	_ = i.f    // @describe func-ref-i.f "i.f"
 
+	var dptr *D // @describe ptr-with-nonptr-methods "dptr"
+	_ = dptr
+
 	// var objects
 	anon := func() {
 		_ = d // @describe ref-lexical-d "d"
@@ -86,6 +89,8 @@ func main() { // @describe func-def-main "main"
 	var _ int // @describe var-def-blank "_"
 
 	var _ lib.Outer // @describe lib-outer "Outer"
+
+	unknown() // @describe call-unknown "\\("
 }
 
 type I interface { // @describe def-iface-I "I"
