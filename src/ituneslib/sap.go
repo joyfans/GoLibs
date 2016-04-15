@@ -59,11 +59,12 @@ func createSapSession() (session *SapSession) {
 }
 
 func (self *SapSession) Close() {
+    self.HttpSession.Close()
+
     if self.session == 0 {
         return
     }
 
-    self.HttpSession.Close()
     itunes.SapCloseSession.Call(self.session)
     self.session = 0
 
