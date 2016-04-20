@@ -47,7 +47,7 @@ func (self *TcpSocket) SetSocks5Proxy(host string, port int, auth *Auth) {
         }
     }
 
-    self.proxy = newSocks5Dialer("tcp", mapHost(host), port, a)
+    self.proxy = NewSocks5Dialer("tcp", mapHost(host), port, a)
 }
 
 func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {

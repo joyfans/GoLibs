@@ -10,3 +10,10 @@ func ReadContent(path string) []byte {
 
     return fs.ReadAll()
 }
+
+func WriteContent(path string, content []byte) int {
+    fs := filestream.Create(path)
+    defer fs.Close()
+
+    return fs.Write(content)
+}

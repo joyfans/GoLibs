@@ -12,7 +12,7 @@ type Socks5Dialer struct {
     timeout time.Duration
 }
 
-func newSocks5Dialer(network string, proxyAddress string, proxyPort int, auth *proxy.Auth) *Socks5Dialer {
+func NewSocks5Dialer(network string, proxyAddress string, proxyPort int, auth *proxy.Auth) *Socks5Dialer {
     s := &Socks5Dialer{
         timeout: 0,
     }

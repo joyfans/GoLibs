@@ -3,7 +3,6 @@ package socket
 import (
     "net"
     "time"
-    "golang.org/x/net/proxy"
 )
 
 type Auth struct {

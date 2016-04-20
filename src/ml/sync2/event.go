@@ -1,9 +1,5 @@
 package sync2
 
-import (
-    "sync"
-)
-
 type Event struct {
     ch chan int
 }
@@ -14,6 +10,16 @@ func NewEvent() *Event {
 
 func (self *Event) Wait() {
     <- self.ch
+}
+
+func (self *Event) TryWait() bool {
+    select {
+        case <- self.ch:
+            return true
+
+        default:
+            return false
+    }
 }
 
 func (self *Event) Signal() {
