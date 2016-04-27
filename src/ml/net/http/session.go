@@ -17,6 +17,7 @@ import (
     "time"
     "io/ioutil"
     "ml/logging/logger"
+    "ml/net/socket"
 )
 
 var cancelFollowRedirects = fmt.Errorf("")
@@ -471,6 +472,14 @@ func (self *Session) AddHeaders(headers Dict) {
 
     for k, v := range headers {
         self.headers.Add(fmt.Sprintf("%v", k), fmt.Sprintf("%v", v))
+    }
+}
+
+func (self *Session) SetSocks5Proxy(host String, port int, auth *socket.Auth) {
+    self.defaultTransport.Dial = func (network, address string) (c netlib.Conn, err error) {
+        socks5 := socket.NewSocks5Dialer("tcp", host.String(), port, auth)
+        a := String(address).Split(":", 1)
+        return socks5.Connect(network, a[0].String(), a[1].ToInt(), 30 * time.Second)
     }
 }
 

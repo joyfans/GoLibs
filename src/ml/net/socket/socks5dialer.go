@@ -12,27 +12,35 @@ type Socks5Dialer struct {
     timeout time.Duration
 }
 
-func NewSocks5Dialer(network string, proxyAddress string, proxyPort int, auth *proxy.Auth) *Socks5Dialer {
+func NewSocks5Dialer(network string, proxyAddress string, proxyPort int, auth *Auth) *Socks5Dialer {
     s := &Socks5Dialer{
         timeout: 0,
     }
 
     var err error
+    var a *proxy.Auth
 
-    s.socks5, err = proxy.SOCKS5(network, fmt.Sprintf("%s:%d", proxyAddress, proxyPort), auth, s)
+    if auth != nil {
+        a = &proxy.Auth{
+            User: auth.User,
+            Password: auth.Password,
+        }
+    }
+
+    s.socks5, err = proxy.SOCKS5(network, fmt.Sprintf("%s:%d", proxyAddress, proxyPort), a, s)
     RaiseSocketError(err)
 
     return s
 }
 
-func (self *Socks5Dialer) setTimeout(timeout time.Duration) {
+func (self *Socks5Dialer) SetTimeout(timeout time.Duration) {
     if timeout >= 0 {
         self.timeout = timeout
     }
 }
 
 func (self *Socks5Dialer) Connect(network, host string, port int, timeout time.Duration) (net.Conn, error) {
-    self.setTimeout(timeout)
+    self.SetTimeout(timeout)
     return self.socks5.Dial(network, fmt.Sprintf("%s:%d", host, port))
 }
 

@@ -4,7 +4,6 @@ import (
     "fmt"
     "net"
     "time"
-    "golang.org/x/net/proxy"
 )
 
 var (
@@ -38,16 +37,7 @@ func (self *TcpSocket) Close() {
 }
 
 func (self *TcpSocket) SetSocks5Proxy(host string, port int, auth *Auth) {
-    var a *proxy.Auth
-
-    if auth != nil {
-        a = &proxy.Auth{
-            User: auth.User,
-            Password: auth.Password,
-        }
-    }
-
-    self.proxy = NewSocks5Dialer("tcp", mapHost(host), port, a)
+    self.proxy = NewSocks5Dialer("tcp", mapHost(host), port, auth)
 }
 
 func (self *TcpSocket) Connect(host string, port int, timeout time.Duration) {
