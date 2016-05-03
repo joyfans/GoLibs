@@ -95,7 +95,7 @@ func raise(resp *httplib.Response, err error) {
 
     msg := String(err.Error())
     switch {
-        case msg.Contains("No connection could be made because the target machine actively refused it"):
+        case msg.Contains("connectex:"):
             Raise(NewHttpError(
                 HTTP_ERROR_CANNOT_CONNECT,
                 String(resp.Request.Method),

@@ -22,12 +22,27 @@ import (
 
 var cancelFollowRedirects = fmt.Errorf("")
 
+const (
+    NoneProxy   = iota
+    Socks5Proxy
+    HttpProxy
+)
+
 type Session struct {
     cookie             *cookiejar.Jar
     client             *httplib.Client
     headers             httplib.Header
     defaultTransport   *Transport
-    DefaultOptions      *RequestOptions
+    DefaultOptions     *RequestOptions
+
+    proxyType           int
+}
+
+func getDefaultDialer() *netlib.Dialer {
+    return &netlib.Dialer{
+                Timeout     : 30 * time.Second,
+                KeepAlive   : 30 * time.Second,
+            }
 }
 
 func NewSession() *Session {
@@ -39,10 +54,7 @@ func NewSession() *Session {
     defaultTransport := newTransport(&httplib.Transport{
         Proxy               : nil,
         // DisableKeepAlives   : true,
-        Dial                : (&netlib.Dialer{
-                                    Timeout     : 30 * time.Second,
-                                    KeepAlive   : 30 * time.Second,
-                                }).Dial,
+        Dial                : getDefaultDialer().Dial,
 
         TLSHandshakeTimeout : 10 * time.Second,
     })
@@ -319,6 +331,9 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
                 case msg.Contains("Bad Gateway"):
                     herr.Type = HTTP_ERROR_BAD_GATE_WAY
 
+                case msg.Contains("connectex:"):
+                    herr.Type = HTTP_ERROR_CANNOT_CONNECT
+
                 default:
                     herr.Type = HTTP_ERROR_GENERIC
             }
@@ -475,17 +490,31 @@ func (self *Session) AddHeaders(headers Dict) {
     }
 }
 
+func (self *Session) ProxyType() int {
+    return self.proxyType
+}
+
 func (self *Session) SetSocks5Proxy(host String, port int, auth *socket.Auth) {
+    if host.IsEmpty() {
+        self.defaultTransport.Dial = getDefaultDialer().Dial
+        self.proxyType = NoneProxy
+        return
+    }
+
     self.defaultTransport.Dial = func (network, address string) (c netlib.Conn, err error) {
         socks5 := socket.NewSocks5Dialer("tcp", host.String(), port, auth)
         a := String(address).Split(":", 1)
         return socks5.Connect(network, a[0].String(), a[1].ToInt(), 30 * time.Second)
     }
+
+    self.SetProxy("", 0)
+    self.proxyType = Socks5Proxy
 }
 
 func (self *Session) SetProxy(host String, port int, userAndPassword ...String) (err error) {
     if host.IsEmpty() {
         self.defaultTransport.Proxy = nil
+        self.proxyType = NoneProxy
 
     } else {
         var proxyUrl *urllib.URL
@@ -519,6 +548,8 @@ func (self *Session) SetProxy(host String, port int, userAndPassword ...String) 
         }
 
         self.defaultTransport.Proxy = httplib.ProxyURL(proxyUrl)
+        self.SetSocks5Proxy("", 0, nil)
+        self.proxyType = HttpProxy
     }
 
     return
