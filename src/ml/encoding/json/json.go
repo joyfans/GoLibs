@@ -20,6 +20,13 @@ func MustMarshalIndent(v interface{}, prefix, indent string) []byte {
     return data
 }
 
+func MustUnmarshal(data []byte, v interface{}) {
+    err := Unmarshal(data, v)
+    if err != nil {
+        Raise(NewJSONDecodeError(err.Error()))
+    }
+}
+
 func LoadFile(file string, v interface{}) {
     f, err := os.Open(file)
     if err != nil {
