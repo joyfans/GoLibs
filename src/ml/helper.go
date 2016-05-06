@@ -1,11 +1,13 @@
 package ml
 
 func If(cond bool, True interface{}, False interface{}) interface{} {
-    if cond {
-        return True
-    }
+    switch cond {
+        case true:
+            return True
 
-    return False
+        default:
+            return False
+    }
 }
 
 func FlagOn(flags, bit int) bool {

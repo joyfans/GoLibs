@@ -1,8 +1,9 @@
 ﻿package trace
 
 import (
-    . "fmt"
+    "fmt"
     "runtime"
+    "reflect"
     "path/filepath"
 )
 
@@ -30,7 +31,7 @@ func raiseimpl(v interface{}) {
         default:
             exp = &Exception{
                         Traceback   : string(stack(3, depth)),
-                        Message     : Sprintf("[%s:%d] [%T] %v\n", name, line, v, v),
+                        Message     : fmt.Sprintf("[%s:%d] [%T] %v\n", name, line, v, v),
                         Value       : v,
                     }
     }
@@ -65,8 +66,23 @@ func Catch(exp interface{}) *Exception {
             name, _, line := getCaller(skip)
             return &Exception{
                         Traceback   : string(stack(skip, depth)),
-                        Message     : Sprintf("[%s:%d] %v\n", name, line, e),
+                        Message     : fmt.Sprintf("[%s:%d] %v\n", name, line, e),
                         Value       : e,
                     }
     }
+}
+
+func IsError(exp, typ interface{}) bool {
+    expType := reflect.TypeOf(exp)
+    typType := reflect.TypeOf(typ)
+
+    for expType.Kind() == reflect.Ptr {
+        expType = expType.Elem()
+    }
+
+    for typType.Kind() == reflect.Ptr {
+        typType = typType.Elem()
+    }
+
+    return expType == typType
 }

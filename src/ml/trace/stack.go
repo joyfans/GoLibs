@@ -1,7 +1,7 @@
 ﻿package trace
 
 import (
-    . "fmt"
+    "fmt"
     "runtime"
     "bytes"
     "strings"
@@ -55,7 +55,7 @@ func stack(skip, depth int) []byte {
             file, line := f.FileLine(pc)
             funcName := function(f.Name())
 
-            Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+            fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
 
             if Config.ReadSource {
                 if file != lastFile {
@@ -67,9 +67,9 @@ func stack(skip, depth int) []byte {
                     lastFile = file
                 }
 
-                Fprintf(buf, "\t%s: %s\n", funcName, source(lines, line - 1))
+                fmt.Fprintf(buf, "\t%s: %s\n", funcName, source(lines, line - 1))
             } else {
-                Fprintf(buf, "\t%s\n", funcName)
+                fmt.Fprintf(buf, "\t%s\n", funcName)
             }
 
             if bytes.Equal(funcName, mainFuncName) {
@@ -87,9 +87,9 @@ func stack(skip, depth int) []byte {
 
             funcName := function(runtime.FuncForPC(pc).Name())
 
-            text := Sprintf("%s:%d (0x%x)\n", file, line, pc)
+            text := fmt.Sprintf("%s:%d (0x%x)\n", file, line, pc)
 
-            // Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
+            // fmt.Fprintf(buf, "%s:%d (0x%x)\n", file, line, pc)
 
             if Config.ReadSource {
                 if file != lastFile {
@@ -101,13 +101,13 @@ func stack(skip, depth int) []byte {
                     lastFile = file
                 }
 
-                text += Sprintf("\t%s: %s", funcName, source(lines, line - 1))
+                text += fmt.Sprintf("\t%s: %s", funcName, source(lines, line - 1))
 
-                // Fprintf(buf, "\t%s: %s\n", funcName, source(lines, line - 1))
+                // fmt.Fprintf(buf, "\t%s: %s\n", funcName, source(lines, line - 1))
 
             } else {
-                text += Sprintf("\t%s", funcName)
-                // Fprintf(buf, "\t%s\n", funcName)
+                text += fmt.Sprintf("\t%s", funcName)
+                // fmt.Fprintf(buf, "\t%s\n", funcName)
             }
 
             traceback = append(traceback, text)
