@@ -46,6 +46,7 @@ import (
 //go:cgo_import_dynamic ituneslib/itunesdll.Proc_MachineDataClose MachineDataClose "iTunesHelper.dll"
 //go:cgo_import_dynamic ituneslib/itunesdll.Proc_MachineDataGetData MachineDataGetData "iTunesHelper.dll"
 
+//go:cgo_import_dynamic ituneslib/itunesdll.Proc_EncryptJsSpToken EncryptJsSpToken "iTunesHelper.dll"
 var (
     Proc_Initialize,
     Proc_FreeMemory,
@@ -88,4 +89,6 @@ var (
     Proc_MachineDataFree,
     Proc_MachineDataClose,
     Proc_MachineDataGetData syscall.Proc
+
+    Proc_EncryptJsSpToken syscall.Proc
 )

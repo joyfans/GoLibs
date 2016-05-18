@@ -9,7 +9,8 @@ import (
 )
 
 const (
-    DefaultOSXUserAgent = "iTunes/12.3.2 (Macintosh; OS X 10.10.5) AppleWebKit/600.8.9"
+    DefaultOSXUserAgent1 = "iTunes/12.3.2 (Macintosh; OS X 10.10.5) AppleWebKit/600.8.9"
+    DefaultOSXUserAgent = "iTunes/12.4 (Macintosh; OS X 10.11.3) AppleWebKit/601.4.4"
     DefaultWindowsUserAgent = "iTunes/12.3 (Windows; Microsoft Windows 8.1 x64 Business Edition (Build 9200); x64) AppleWebKit/7601.1056.1.1"
 )
 
@@ -160,8 +161,8 @@ func (self *SapSession) ExchangeData(sapType SapCertType, data []byte) (cert []b
                         self.session,
                         uintptr(sapType),
                         uintptr(unsafe.Pointer(self.deviceId)),
-                        uintptr(unsafe.Pointer(&data[0])),
-                        uintptr(len(data)),
+                        bytesPtr(data),
+                        bytesLen(data),
                         uintptr(unsafe.Pointer(&buf)),
                         uintptr(unsafe.Pointer(&size)),
                     )

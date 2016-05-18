@@ -100,6 +100,10 @@ func (self *File) Close() {
     }
 }
 
+func (self *File) Writer() io.Writer {
+    return self.file
+}
+
 func (self *File) Length() int64 {
     fi, err := self.file.Stat()
     raiseGenericError(err)

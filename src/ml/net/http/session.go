@@ -177,7 +177,7 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
             params = Dict{}
 
         default:
-            Raise(NewHttpError(HTTP_ERROR_GENERIC, method, url, String(fmt.Sprintf("invalid params number: %d", len(params_)))))
+            Raise(NewHttpError(HTTP_ERROR_GENERIC, method, url, String(fmt.Sprintf("invalid params: %d", len(params_)))))
     }
 
     switch v := params["encoding"].(type) {
@@ -457,6 +457,7 @@ func (self *Session) SetCookies(url String, cookies Dict) {
         c = append(c, &httplib.Cookie{
                 Name    : fmt.Sprintf("%v", k),
                 Value   : fmt.Sprintf("%v", v),
+                Domain  : u.Host,
             },
         )
     }

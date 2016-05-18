@@ -47,6 +47,8 @@ type _itunesAPI struct {
     MachineDataFree,
     MachineDataClose,
     MachineDataGetData syscall.Proc
+
+    EncryptJsSpToken syscall.Proc
 }
 
 var itunes _itunesAPI
@@ -89,5 +91,7 @@ func itunesDllInitialize()  {
         _itunesdll.Proc_MachineDataFree,
         _itunesdll.Proc_MachineDataClose,
         _itunesdll.Proc_MachineDataGetData,
+
+        _itunesdll.Proc_EncryptJsSpToken,
     }
 }

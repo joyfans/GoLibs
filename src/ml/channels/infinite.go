@@ -12,7 +12,7 @@ import (
 type InfiniteChannel struct {
     input   chan interface{}
     output  chan interface{}
-    buffer  array.Array
+    buffer *array.Array
     event  *sync2.Event
 }
 
@@ -20,7 +20,7 @@ func NewInfiniteChannel() *InfiniteChannel {
     ch := &InfiniteChannel{
                 input   : make(chan interface{}),
                 output  : make(chan interface{}),
-                buffer  : *array.NewArray(),
+                buffer  : array.NewArray(),
                 event   : sync2.NewEvent(),
         }
 
@@ -50,7 +50,7 @@ func (self *InfiniteChannel) Close() {
 func (self *InfiniteChannel) shutdown() {
     fmt.Println("shutdown")
 FLUSH:
-    for _, v := range (self.buffer) {
+    for _, v := range *self.buffer {
         select {
             case self.output <- v:
 

@@ -1,5 +1,9 @@
 package ituneslib
 
+import (
+    "fmt"
+)
+
 type CountryID int
 
 const (
@@ -34,7 +38,11 @@ var countryData = map[CountryID]*countryInfo{
 }
 
 func (self CountryID) String() string {
-    return countryData[self].name
+    if n, ok := countryData[self]; ok {
+        return n.name
+    }
+
+    return fmt.Sprintf("UNKNOWN_COUNTRY_ID_%d", self)
 }
 
 func (self CountryID) Valid() bool {
