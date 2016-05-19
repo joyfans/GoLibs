@@ -28,6 +28,23 @@ const (
     HttpProxy
 )
 
+type HttpSesstion interface {
+    Close()
+    GetDefaultOptions() *RequestOptions
+    Request(method, url interface{}, params ...Dict) (resp *Response)
+    Get(url interface{}, params ...Dict) (resp *Response)
+    Post(url interface{}, params ...Dict) (resp *Response)
+    ClearHeaders()
+    SetCookies(url String, cookies Dict)
+    Headers() httplib.Header
+    SetHeaders(headers Dict)
+    AddHeaders(headers Dict)
+    ProxyType() int
+    SetSocks5Proxy(host String, port int, auth *socket.Auth)
+    SetProxy(host String, port int, userAndPassword ...String) (err error)
+    SetTimeout(timeout time.Duration)
+}
+
 type Session struct {
     cookie             *cookiejar.Jar
     client             *httplib.Client
@@ -81,6 +98,10 @@ func NewSession() *Session {
 
 func (self *Session) Close() {
     self.defaultTransport.CloseIdleConnections()
+}
+
+func (self *Session) GetDefaultOptions() *RequestOptions {
+    return self.DefaultOptions
 }
 
 func toString(value interface{}) String {

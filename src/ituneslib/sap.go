@@ -20,20 +20,29 @@ type SapSession struct {
     session         uintptr
     primeSignature  []byte
     deviceId        *FairPlayHWInfo
-    HttpSession     *http.Session
+    HttpSession     http.HttpSesstion
     UrlBag          Dict
 }
 
-var sapSessionPool = make(chan *SapSession, 1000)
+const useSapPool = !true
+var sapSessionPool = make(chan *SapSession, 10000)
 
 func sapInitialize() {
+    if useSapPool == false {
+        return
+    }
+
     for i := cap(sapSessionPool); i != 0; i-- {
         sapSessionPool <- createSapSession()
     }
 }
 
 func NewSapSession() (session *SapSession) {
-    return <- sapSessionPool
+    if useSapPool {
+        return <- sapSessionPool
+    }
+
+    return createSapSession()
 }
 
 func createSapSession() (session *SapSession) {
@@ -69,7 +78,9 @@ func (self *SapSession) Close() {
     itunes.SapCloseSession.Call(self.session)
     self.session = 0
 
-    sapSessionPool <- createSapSession()
+    if useSapPool {
+        sapSessionPool <- createSapSession()
+    }
 }
 
 func (self *SapSession) Initialize(userAgent string, country CountryID, sapType SapCertType) {
@@ -83,18 +94,18 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
 
     // self.HttpSession.SetProxy("localhost", 6789)
 
-    self.HttpSession.DefaultOptions.AutoRetry = true
-    self.HttpSession.DefaultOptions.Ignore404 = false
+    self.HttpSession.GetDefaultOptions().AutoRetry = true
+    self.HttpSession.GetDefaultOptions().Ignore404 = false
 
     self.initUrlbag()
     self.initSap(sapType)
 }
 
 func (self *SapSession) initUrlbag() {
-    // if len(sharedUrlBag) != 0 {
-    //     self.UrlBag = sharedUrlBag
-    //     return
-    // }
+    if len(sharedUrlBag) != 0 {
+        self.UrlBag = sharedUrlBag
+        return
+    }
 
     resp := self.HttpSession.Get("https://init.itunes.apple.com/bag.xml?ix=5&ign-bsn=1")
 
@@ -105,11 +116,16 @@ func (self *SapSession) initUrlbag() {
     sharedUrlBag = self.UrlBag
 }
 
-func (self *SapSession) initSap(sapType SapCertType) {
-    signSapSetupCert := Dict{}
-    self.HttpSession.Get(self.UrlBag["sign-sap-setup-cert"]).Plist(&signSapSetupCert)
+var signSapSetupCertData []byte
 
-    cert := self.ExchangeData(sapType, signSapSetupCert["sign-sap-setup-cert"].([]byte))
+func (self *SapSession) initSap(sapType SapCertType) {
+    if signSapSetupCertData == nil {
+        signSapSetupCert := Dict{}
+        self.HttpSession.Get(self.UrlBag["sign-sap-setup-cert"]).Plist(&signSapSetupCert)
+        signSapSetupCertData = signSapSetupCert["sign-sap-setup-cert"].([]byte)
+    }
+
+    cert := self.ExchangeData(sapType, signSapSetupCertData)
 
     body, err := plistlib.MarshalIndent(Dict{"sign-sap-setup-buffer": cert}, plistlib.XMLFormat, "    ")
     RaiseIf(err)
