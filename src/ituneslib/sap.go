@@ -14,8 +14,6 @@ const (
     DefaultWindowsUserAgent = "iTunes/12.3 (Windows; Microsoft Windows 8.1 x64 Business Edition (Build 9200); x64) AppleWebKit/7601.1056.1.1"
 )
 
-var sharedUrlBag Dict
-
 type SapSession struct {
     session         uintptr
     primeSignature  []byte
@@ -101,9 +99,11 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
     self.initSap(sapType)
 }
 
+var cachedUrlBag Dict
+
 func (self *SapSession) initUrlbag() {
-    if len(sharedUrlBag) != 0 {
-        self.UrlBag = sharedUrlBag
+    if len(cachedUrlBag) != 0 {
+        self.UrlBag = cachedUrlBag
         return
     }
 
@@ -113,19 +113,19 @@ func (self *SapSession) initUrlbag() {
     resp.Plist(&plist)
     plistlib.Unmarshal(plist["bag"].([]byte), &self.UrlBag)
 
-    sharedUrlBag = self.UrlBag
+    cachedUrlBag = self.UrlBag
 }
 
-var signSapSetupCertData []byte
+var cachedSignSapSetupCert []byte
 
 func (self *SapSession) initSap(sapType SapCertType) {
-    if signSapSetupCertData == nil {
+    if cachedSignSapSetupCert == nil {
         signSapSetupCert := Dict{}
         self.HttpSession.Get(self.UrlBag["sign-sap-setup-cert"]).Plist(&signSapSetupCert)
-        signSapSetupCertData = signSapSetupCert["sign-sap-setup-cert"].([]byte)
+        cachedSignSapSetupCert = signSapSetupCert["sign-sap-setup-cert"].([]byte)
     }
 
-    cert := self.ExchangeData(sapType, signSapSetupCertData)
+    cert := self.ExchangeData(sapType, cachedSignSapSetupCert)
 
     body, err := plistlib.MarshalIndent(Dict{"sign-sap-setup-buffer": cert}, plistlib.XMLFormat, "    ")
     RaiseIf(err)

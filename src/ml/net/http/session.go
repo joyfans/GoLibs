@@ -311,7 +311,11 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
     self.client.CheckRedirect = nil
 
     if resp != nil && resp.Body != nil {
-        defer resp.Body.Close()
+        defer func() {
+            if resp.Body != nil {
+                resp.Body.Close()
+            }
+        }()
     }
 
     switch {
@@ -364,6 +368,12 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
             return nil
     }
 
+    switch HttpStatusCode(resp.StatusCode) {
+        case StatusMovedPermanently, StatusFound, StatusSeeOther, StatusTemporaryRedirect:
+            resp.Body.Close()
+            resp.Body = nil
+    }
+
     // fix net/http/client/shouldRedirectPost does not follow StatusTemporaryRedirect
 
     switch HttpStatusCode(resp.StatusCode) {
@@ -381,7 +391,9 @@ func (self *Session) requestImpl(methodi, urli interface{}, params_ ...Dict) (*R
             }
     }
 
-    return NewResponse(resp, options)
+    r := NewResponse(resp, options)
+
+    return r
 }
 
 func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Response) {
@@ -446,7 +458,7 @@ func (self *Session) Request(method, url interface{}, params ...Dict) (resp *Res
                 continue
 
             default:
-                logger.Debug("unknown StatusCode: %d", resp.StatusCode)
+                logger.Debug("unknown StatusCode: %d %v", resp.StatusCode, resp.StatusCode)
         }
 
         break
