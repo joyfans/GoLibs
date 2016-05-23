@@ -9,9 +9,11 @@ import (
 )
 
 const (
-    DefaultOSXUserAgent1 = "iTunes/12.3.2 (Macintosh; OS X 10.10.5) AppleWebKit/600.8.9"
+    OSXUserAgent12_3 = "iTunes/12.3 (Macintosh; OS X 10.10.5) AppleWebKit/600.8.9"
+
     DefaultOSXUserAgent = "iTunes/12.4 (Macintosh; OS X 10.11.3) AppleWebKit/601.4.4"
     DefaultWindowsUserAgent = "iTunes/12.3 (Windows; Microsoft Windows 8.1 x64 Business Edition (Build 9200); x64) AppleWebKit/7601.1056.1.1"
+    // DefaultWindowsUserAgent = "iTunes/12.4 (Windows; Microsoft Windows 10.0 x64 Business Edition (Build 9200); x64) AppleWebKit/7601.6016.1000.1"
 )
 
 type SapSession struct {
@@ -31,7 +33,7 @@ func sapInitialize() {
     }
 
     for i := cap(sapSessionPool); i != 0; i-- {
-        sapSessionPool <- createSapSession()
+        sapSessionPool <- createSapSession(nil)
     }
 }
 
@@ -40,13 +42,19 @@ func NewSapSession() (session *SapSession) {
         return <- sapSessionPool
     }
 
-    return createSapSession()
+    return createSapSession(nil)
 }
 
-func createSapSession() (session *SapSession) {
+func NewSapSessionWithDeviceId(deviceId *FairPlayHWInfo) (session *SapSession) {
+    return createSapSession(deviceId)
+}
+
+func createSapSession(deviceId *FairPlayHWInfo) (session *SapSession) {
     var sapSession uintptr
 
-    deviceId := NewRandomFairPlayHWInfo()
+    if deviceId == nil {
+        deviceId = NewRandomFairPlayHWInfo()
+    }
 
     st, _, _ := itunes.SapCreateSession.Call(uintptr(unsafe.Pointer(&sapSession)), uintptr(unsafe.Pointer(deviceId)))
 
@@ -77,7 +85,7 @@ func (self *SapSession) Close() {
     self.session = 0
 
     if useSapPool {
-        sapSessionPool <- createSapSession()
+        sapSessionPool <- createSapSession(nil)
     }
 }
 
