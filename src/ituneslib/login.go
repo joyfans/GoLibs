@@ -73,10 +73,12 @@ func (self *Login) Login(sap *SapSession, params Dict) bool {
                 },
             )
 
+    logger.Debug("[%v] login ret:\n%s", params["userName"], resp.Content)
+
     var p JsonDict
     resp.Plist(&p)
 
-    logger.Debug("[%v] login ret:\n%s", params["userName"], resp.Content)
+    // x, _ := plistlib.MarshalIndent(p, plistlib.XMLFormat, "  ")
 
     token := p["passwordToken"]
     if token == nil {

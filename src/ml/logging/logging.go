@@ -154,7 +154,9 @@ func (self *Logger) output(level int, format interface{}, args ...interface{}) {
     buf := []byte(string(formatter) + text + "\n")
 
     for _, out := range self.out {
-        out.Write(buf)
+        if out != nil {
+            out.Write(buf)
+        }
     }
 }
 
@@ -234,6 +236,16 @@ func (self *Logger) LogToFile(enable bool, path ...String) error {
     self.out = append(self.out, output)
 
     return nil
+}
+
+func (self *Logger) LogToConsole(enable bool) {
+    switch enable {
+        case true:
+            self.out[0] = os.Stdout
+
+        case false:
+            self.out[0] = nil
+    }
 }
 
 func (self *Logger) getDefaultFileName() string {
