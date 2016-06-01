@@ -104,7 +104,7 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
     self.HttpSession.GetDefaultOptions().Ignore404 = false
 
     self.initUrlbag()
-    self.initSap(sapType)
+    self.establishContext(sapType)
 }
 
 var cachedUrlBag Dict
@@ -124,18 +124,34 @@ func (self *SapSession) initUrlbag() {
     cachedUrlBag = self.UrlBag
 }
 
+func (self *SapSession) establishContext(sapType SapCertType) {
+    certificateData := self.loadCertificateData()
+    data := self.ExchangeData(sapType, certificateData)
+    data = self.postExchangeData(data)
+    self.ExchangeData(sapType, data)
+}
+
 var cachedSignSapSetupCert []byte
 
-func (self *SapSession) initSap(sapType SapCertType) {
+func (self *SapSession) loadCertificateData() []byte {
     if cachedSignSapSetupCert == nil {
         signSapSetupCert := Dict{}
         self.HttpSession.Get(self.UrlBag["sign-sap-setup-cert"]).Plist(&signSapSetupCert)
         cachedSignSapSetupCert = signSapSetupCert["sign-sap-setup-cert"].([]byte)
     }
 
-    cert := self.ExchangeData(sapType, cachedSignSapSetupCert)
+    return cachedSignSapSetupCert
+}
 
-    body, err := plistlib.MarshalIndent(Dict{"sign-sap-setup-buffer": cert}, plistlib.XMLFormat, "    ")
+func (self *SapSession) postExchangeData(data []byte) []byte {
+    body, err := plistlib.MarshalIndent(
+                    Dict{
+                        "sign-sap-setup-buffer": data,
+                    },
+                    plistlib.XMLFormat,
+                    "    ",
+                )
+
     RaiseIf(err)
 
     signSapSetupBuffer := Dict{}
@@ -150,7 +166,7 @@ func (self *SapSession) initSap(sapType SapCertType) {
         },
     ).Plist(&signSapSetupBuffer)
 
-    self.ExchangeData(sapType, signSapSetupBuffer["sign-sap-setup-buffer"].([]byte))
+    return signSapSetupBuffer["sign-sap-setup-buffer"].([]byte)
 }
 
 func (self *SapSession) CreatePrimeSignature() []byte {
