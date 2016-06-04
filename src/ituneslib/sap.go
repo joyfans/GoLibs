@@ -6,6 +6,7 @@ import (
     "unsafe"
     "plistlib"
     "ml/net/http"
+    "ml/io2"
 )
 
 const (
@@ -24,7 +25,7 @@ type SapSession struct {
     UrlBag          Dict
 }
 
-const useSapPool = !true
+const useSapPool = false
 var sapSessionPool = make(chan *SapSession, 10000)
 
 func sapInitialize() {
@@ -97,8 +98,6 @@ func (self *SapSession) Initialize(userAgent string, country CountryID, sapType 
         "X-Apple-Store-Front"   : country.StoreFront(),
         "X-Apple-Tz"            : country.TimeZone(),
     })
-
-    // self.HttpSession.SetProxy("localhost", 6789)
 
     self.HttpSession.GetDefaultOptions().AutoRetry = true
     self.HttpSession.GetDefaultOptions().Ignore404 = false
