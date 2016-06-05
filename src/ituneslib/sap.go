@@ -6,7 +6,6 @@ import (
     "unsafe"
     "plistlib"
     "ml/net/http"
-    "ml/io2"
 )
 
 const (
