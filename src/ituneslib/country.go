@@ -7,12 +7,13 @@ import (
 type CountryID int
 
 const (
-    CountryID_China       = CountryID(143465)
-    CountryID_Taiwan      = CountryID(143470)
-    CountryID_Japan       = CountryID(143462)
-    CountryID_India       = CountryID(143467)
-    CountryID_NewZealand  = CountryID(143461)
-    CountryID_Vietnam     = CountryID(143471)
+    CountryID_China         = CountryID(143465)
+    CountryID_Taiwan        = CountryID(143470)
+    CountryID_Japan         = CountryID(143462)
+    CountryID_India         = CountryID(143467)
+    CountryID_NewZealand    = CountryID(143461)
+    CountryID_Vietnam       = CountryID(143471)
+    CountryID_UnitedState   = CountryID(143441)
 )
 
 type countryInfo struct {
@@ -35,6 +36,7 @@ var countryData = map[CountryID]*countryInfo{
     CountryID_India         : &countryInfo{"143467,32",      "IN",   "India",       "19800" },
     CountryID_NewZealand    : &countryInfo{"143461,32",      "NZ",   "NewZealand",  "46800" },
     CountryID_Vietnam       : &countryInfo{"143471-2,32",    "VN",   "Vietnam",     "25200" },
+    CountryID_UnitedState   : &countryInfo{"143441-1,32",    "US",   "UnitedState", "-18000" },
 }
 
 func (self CountryID) String() string {
